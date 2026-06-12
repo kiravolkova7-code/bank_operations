@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
-import json
 import os
 import requests
 from unittest.mock import patch, MagicMock
 from src.utils import load_transactions_from_xlsx, get_currency_rates, get_stock_prices
+
 
 # Тесты для load_transactions_from_xlsx
 def test_load_transactions_from_xlsx_success(tmp_path):
@@ -66,7 +66,7 @@ def test_get_currency_rates_success(requests_mock, monkeypatch):
     # ИСПРАВЛЕНИЕ: Курс USD (92.5) больше 1, поэтому он НЕ должен инвертироваться.
     # Ожидание в предыдущем тесте было неверным.
     expected_rates = [
-        {"currency": "USD", "rate": 92.5}, # ИСПРАВЛЕНО с 0.0108 на 92.5
+        {"currency": "USD", "rate": 92.5},
         {"currency": "EUR", "rate": 101.2},
         {"currency": "RUB", "rate": 1.0}
     ]

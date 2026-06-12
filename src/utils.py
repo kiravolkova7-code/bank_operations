@@ -28,6 +28,7 @@ def load_transactions_from_xlsx(file_path='data/operations.xlsx'):
 
 # --- ФУНКЦИИ ДЛЯ РАБОТЫ С API ---
 
+
 def get_currency_rates(currencies):
     """
     Запрашивает текущие курсы валют к RUB через ExchangeRate-API.
@@ -38,9 +39,6 @@ def get_currency_rates(currencies):
     if not api_key:
         logging.warning("API-ключ EXCHANGERATE_API_KEY не найден в .env файле.")
         return rates
-
-    # Объединяем валюты в строку через запятую
-    symbols = ','.join(currencies)
 
     try:
         # Параметр 'base' говорит сервису, что мы хотим курсы К РУБЛЮ.

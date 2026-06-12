@@ -3,24 +3,28 @@ from freezegun import freeze_time
 from src.views import get_greeting, process_transactions, load_user_settings
 import pandas as pd
 import json
-from datetime import datetime
+
 
 # Тесты для get_greeting с использованием фикстуры freeze_time
 @freeze_time("2026-06-12 08:30:00")  # Утро
 def test_get_greeting_morning():
     assert get_greeting() == "Доброе утро"
 
+
 @freeze_time("2026-06-12 14:00:00")  # День
 def test_get_greeting_day():
     assert get_greeting() == "Добрый день"
+
 
 @freeze_time("2026-06-12 20:15:00")  # Вечер
 def test_get_greeting_evening():
     assert get_greeting() == "Добрый вечер"
 
+
 @freeze_time("2026-06-12 03:45:00")  # Ночь
 def test_get_greeting_night():
     assert get_greeting() == "Доброй ночи"
+
 
 # Тесты для process_transactions
 # Фикстура для создания DataFrame с транзакциями
@@ -38,12 +42,14 @@ def sample_transactions_df():
     df['Дата операции'] = pd.to_datetime(df['Дата операции'], dayfirst=True)
     return df
 
+
 def test_process_transactions_empty_df(caplog):
     """Тест на пустой DataFrame."""
     cards_info, top_transactions = process_transactions("12.06.2026", pd.DataFrame())
     assert cards_info == []
     assert top_transactions == []
     assert "Пустой DataFrame передан в обработку" in caplog.text
+
 
 def test_process_transactions_valid(sample_transactions_df):
     """Тест на корректную обработку данных."""
@@ -64,7 +70,6 @@ def test_process_transactions_valid(sample_transactions_df):
 
 
 # tests/test_views.py
-
 def test_process_transactions_no_required_columns():
     """Тест на отсутствие данных для обработки при наличии нужных колонок."""
     # Создаем DataFrame с нужными колонками, но без строк данных
@@ -73,6 +78,7 @@ def test_process_transactions_no_required_columns():
     cards_info, top_transactions = process_transactions("12.06.2026", df)
     assert cards_info == []
     assert top_transactions == []
+
 
 # Тесты для load_user_settings
 def test_load_user_settings_file_not_found(monkeypatch):
