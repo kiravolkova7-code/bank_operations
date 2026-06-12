@@ -15,8 +15,9 @@ logging.basicConfig(
 
 def main(input_datetime_str):
     """
-    Главная функция. Принимает строку с датой/временем и возвращает JSON-ответ.
+    Главная функция. Объединяет все элементы в единое целое.
     """
+    # Начало страницы "Главная"
     logging.info(f"Запуск главной функции для даты: {input_datetime_str}")
 
     # 0. Приветствие
@@ -53,6 +54,8 @@ def main(input_datetime_str):
     logging.info("Формирование JSON-ответа завершено.")
 
     print(json.dumps(result, ensure_ascii=False, indent=2))
+
+    # Конец страницы "Главная"
 
 
 # Пример вызова функции (для тестирования)
