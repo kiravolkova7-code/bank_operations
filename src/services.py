@@ -1,22 +1,17 @@
 import json
 import logging
-from datetime import datetime
 import pandas as pd
 
 logger = logging.getLogger('cashback_analyzer')
 
 # Константы ставок кешбэка
-HIGH_CASHBACK_RATE = 0.05  # Ставка повышенного кешбэка (5%)
-TARGET_CURRENCY = 'RUB'    # Анализируем только операции в рублях
+HIGH_CASHBACK_RATE = 0.05
+TARGET_CURRENCY = 'RUB'
+
 
 def analyze_cashback_categories(data_df, year, month):
     """
     Анализирует данные о транзакциях из DataFrame за указанный месяц и год.
-
-    :param data_df: DataFrame, загруженный из файла operations.xlsx.
-    :param year: Год для анализа.
-    :param month: Месяц для анализа.
-    :return: Словарь {Категория: Сумма_кешбэка}
     """
     logger.info(f"Начало анализа кешбэка за {month:02d}.{year}")
 
@@ -27,14 +22,15 @@ def analyze_cashback_categories(data_df, year, month):
 
     # 1. Фильтрация по статусу и валюте
     filtered_df = data_df[
-        (data_df['Статус'] == 'OK') &
-        (data_df['Валюта платежа'] == TARGET_CURRENCY)
+        (data_df['Статус'] == 'OK')
+        and (data_df['Валюта платежа'] == TARGET_CURRENCY)
     ]
 
     # 2. Фильтрация по дате (используем 'Дата платежа')
-    # Приводим столбец к дате, если он еще не в таком формате
-    filtered_df = filtered_df[pd.to_datetime(filtered_df['Дата платежа'], dayfirst=True, errors='coerce').dt.year == year]
-    filtered_df = filtered_df[pd.to_datetime(filtered_df['Дата платежа'], dayfirst=True, errors='coerce').dt.month == month]
+    filtered_df = filtered_df[pd.to_datetime(filtered_df['Дата платежа'],
+                                             dayfirst=True, errors='coerce').dt.year == year]
+    filtered_df = filtered_df[pd.to_datetime(filtered_df['Дата платежа'],
+                                             dayfirst=True, errors='coerce').dt.month == month]
 
     if filtered_df.empty:
         logger.info("Нет подходящих транзакций за указанный период.")
@@ -73,7 +69,6 @@ def get_analysis_as_json(data_df, year, month):
         sorted_items = sorted(analysis_dict.items(), key=lambda item: item[1], reverse=True)
 
         # 2. Создаем новый словарь из отсортированного списка кортежей
-        # В Python 3.7+ порядок ключей в словаре сохраняется
         sorted_analysis_dict = dict(sorted_items)
     else:
         # Если данных нет, просто используем пустой словарь

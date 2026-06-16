@@ -65,12 +65,10 @@ def main(input_datetime_str):
 file_path = 'data/operations.xlsx'
 transactions_data = load_transactions_from_xlsx(file_path)
 
-# Проверяем, что данные успешно загружены (DataFrame не пустой)
 if not transactions_data.empty:
     year_to_analyze = 2021
     month_to_analyze = 4
 
-    # Передаем DataFrame напрямую в функцию сервиса
     json_result = get_analysis_as_json(transactions_data, year_to_analyze, month_to_analyze)
 
     print("Выгодные категории повышенного кешбэка")
@@ -79,7 +77,7 @@ if not transactions_data.empty:
 else:
     print("Не удалось загрузить данные для анализа.")
 
-
+    # Конец Выгодные категории кэшбека
 
 # Пример вызова функции (для тестирования)
 if __name__ == "__main__":
