@@ -28,7 +28,8 @@ def process_transactions(input_datetime_str, transactions_df):
         return [], []
 
     # Парсинг входной даты
-    input_date = pd.to_datetime(input_datetime_str, dayfirst=True, errors='coerce')
+    # Стало (явно указываем формат)
+    input_date = pd.to_datetime(input_datetime_str, format='%Y-%m-%d %H:%M:%S', errors='coerce')
     start_period = input_date.replace(day=1)
 
     # Фильтрация по периоду
