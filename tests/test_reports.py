@@ -1,11 +1,5 @@
 import pandas as pd
-import pytest
-import datetime  # Импортируем модуль, а не функцию
-
-# Убедитесь, что вы импортируете из правильного файла.
-# Если ваш файл с логикой называется 'reports.py', оставьте так.
-# Если он называется 'analyzer.py', измените на: from analyzer import ...
-from src.reports import analyze_spending_by_weekday, save_report
+from src.reports import analyze_spending_by_weekday
 
 
 def test_analyze_success(mocker):
@@ -20,7 +14,6 @@ def test_analyze_success(mocker):
 
     result = analyze_spending_by_weekday(file_path='data/operations.xlsx')
 
-    # Ожидаем DataFrame только с существующими днями (Пн-Чт)
     expected_data = {
         'День недели': ['Пн', 'Вт', 'Ср', 'Чт'],
         'Средняя трата': [100.0, 200.0, 300.0, 400.0]
@@ -37,10 +30,7 @@ def test_analyze_missing_columns(mocker):
 
     result = analyze_spending_by_weekday(file_path='data/operations.xlsx')
 
-    # Текущий код возвращает пустой DataFrame БЕЗ колонок (pd.DataFrame()).
-    # Поэтому проверяем только то, что он пустой.
     assert result.empty is True
-    # assert list(result.columns) == [...] - Убираем эту проверку, так как она не проходит
 
 
 def test_analyze_file_not_found(mocker):
@@ -49,5 +39,4 @@ def test_analyze_file_not_found(mocker):
 
     result = analyze_spending_by_weekday(file_path='data/missing.xlsx')
 
-    # Аналогично предыдущему тесту: проверяем только пустоту DataFrame.
     assert result.empty is True

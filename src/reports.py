@@ -16,7 +16,6 @@ def save_report(filename=None):
 
             try:
                 if filename is None:
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     file_path = f"data/{func.__name__}.json"
                 else:
                     file_path = filename
@@ -64,27 +63,20 @@ def analyze_spending_by_weekday(file_path='data/operations.xlsx', date_str=None)
             df['Сумма операции'].astype(str).str.replace(',', '.'),
             errors='coerce'
         )
-
-        # --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
-        # Теперь диапазон дат определяется ТОЛЬКО по данным внутри загруженного DataFrame
         start_date = df['Дата операции'].min()
         end_date = df['Дата операции'].max()
 
-        # Если в файле вообще нет дат или они некорректны, возвращаем пустой результат
         if pd.isna(start_date) or pd.isna(end_date):
             logging.warning("Нет корректных дат в файле.")
             return pd.DataFrame({'День недели': [], 'Средняя трата': []})
 
         logging.info(f"Анализируются данные из файла за период с {start_date.date()} по {end_date.date()}")
 
-        # Фильтрация данных за определенный период (весь период в данном случае)
-        mask = (
-                (df['Дата операции'] >= start_date) &
-                (df['Дата операции'] <= end_date) &
-                (df['Дата операции'].notna())
-        )
+        mask = ((df['Дата операции'] >= start_date)
+                & (df['Дата операции'] <= end_date)
+                & (df['Дата операции'].notna()))
+
         filtered_df = df.loc[mask]
-        # -------------------
 
         if filtered_df.empty or filtered_df['Сумма операции'].isna().all():
             logging.warning("Нет данных о транзакциях за указанный период.")
