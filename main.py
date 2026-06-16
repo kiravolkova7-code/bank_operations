@@ -1,8 +1,9 @@
 import logging
 import json
+import pandas as pd
 from src.views import get_greeting, process_transactions, load_user_settings
 from src.utils import load_transactions_from_xlsx, get_currency_rates, get_stock_prices
-
+from src.services import get_analysis_as_json
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
@@ -17,6 +18,8 @@ def main(input_datetime_str):
     """
     Главная функция. Объединяет все элементы в единое целое.
     """
+
+    '''
     # Начало страницы "Главная"
     logging.info(f"Запуск главной функции для даты: {input_datetime_str}")
 
@@ -56,6 +59,26 @@ def main(input_datetime_str):
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
     # Конец страницы "Главная"
+    '''
+
+    # Начало Выгодные категории кэшбека
+file_path = 'data/operations.xlsx'
+transactions_data = load_transactions_from_xlsx(file_path)
+
+# Проверяем, что данные успешно загружены (DataFrame не пустой)
+if not transactions_data.empty:
+    year_to_analyze = 2021
+    month_to_analyze = 4
+
+    # Передаем DataFrame напрямую в функцию сервиса
+    json_result = get_analysis_as_json(transactions_data, year_to_analyze, month_to_analyze)
+
+    print("Выгодные категории повышенного кешбэка")
+    print(f"Результат анализа за {month_to_analyze:02d}.{year_to_analyze}:")
+    print(json_result)
+else:
+    print("Не удалось загрузить данные для анализа.")
+
 
 
 # Пример вызова функции (для тестирования)
