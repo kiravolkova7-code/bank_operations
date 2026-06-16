@@ -12,7 +12,7 @@ def load_transactions_from_xlsx(file_path='data/operations.xlsx'):
     Загружает данные о транзакциях из .xlsx файла.
     """
     try:
-        df = pd.read_excel(file_path,)
+        df = pd.read_excel(file_path)
 
         # Если столбец 'Дата операции' существует, преобразуем его вручную
         if 'Дата операции' in df.columns:
