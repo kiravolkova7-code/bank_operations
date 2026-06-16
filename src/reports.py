@@ -47,7 +47,7 @@ def save_report(filename=None):
 def analyze_spending_by_weekday(file_path='data/operations.xlsx', date_str=None) -> object:
     """
     Загружает транзакции из Excel-файла и рассчитывает средние траты по дням недели.
-    Анализирует весь доступный период данных, если дата не указана.
+    Анализирует весь период данных внутри переданного файла.
     """
     try:
         df = pd.read_excel(file_path)
@@ -65,26 +65,26 @@ def analyze_spending_by_weekday(file_path='data/operations.xlsx', date_str=None)
             errors='coerce'
         )
 
-        # --- ИСПРАВЛЕННАЯ ЛОГИКА ФИЛЬТРАЦИИ ---
-        # Определяем диапазон дат на основе имеющихся данных или переданной даты
-        if date_str:
-            end_date = pd.Timestamp(date_str)
-            start_date = end_date - pd.Timedelta(days=90)
-            logging.info(f"Анализируются данные за последние 90 дней до {end_date.date()}")
-        else:
-            # Если дата не передана, анализируем весь доступный период
-            start_date = df['Дата операции'].min()
-            end_date = df['Дата операции'].max()
-            logging.info(f"Анализируются все доступные данные с {start_date.date()} по {end_date.date()}")
+        # --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
+        # Теперь диапазон дат определяется ТОЛЬКО по данным внутри загруженного DataFrame
+        start_date = df['Дата операции'].min()
+        end_date = df['Дата операции'].max()
 
-        # Фильтрация данных за определенный период
+        # Если в файле вообще нет дат или они некорректны, возвращаем пустой результат
+        if pd.isna(start_date) or pd.isna(end_date):
+            logging.warning("Нет корректных дат в файле.")
+            return pd.DataFrame({'День недели': [], 'Средняя трата': []})
+
+        logging.info(f"Анализируются данные из файла за период с {start_date.date()} по {end_date.date()}")
+
+        # Фильтрация данных за определенный период (весь период в данном случае)
         mask = (
                 (df['Дата операции'] >= start_date) &
                 (df['Дата операции'] <= end_date) &
                 (df['Дата операции'].notna())
         )
         filtered_df = df.loc[mask]
-        # -----------------------------------
+        # -------------------
 
         if filtered_df.empty or filtered_df['Сумма операции'].isna().all():
             logging.warning("Нет данных о транзакциях за указанный период.")
