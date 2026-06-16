@@ -4,6 +4,7 @@ import pandas as pd
 from src.views import get_greeting, process_transactions, load_user_settings
 from src.utils import load_transactions_from_xlsx, get_currency_rates, get_stock_prices
 from src.services import get_analysis_as_json
+from src.reports import analyze_spending_by_weekday
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
@@ -59,7 +60,7 @@ def main(input_datetime_str):
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
     # Конец страницы "Главная"
-    '''
+    
 
     # Начало Выгодные категории кэшбека
 file_path = 'data/operations.xlsx'
@@ -78,6 +79,14 @@ else:
     print("Не удалось загрузить данные для анализа.")
 
     # Конец Выгодные категории кэшбека
+    '''
+    # Начало Траты по дням недели
+
+    spending_report = analyze_spending_by_weekday('data/operations.xlsx')
+
+    print("\n--- Отчет о средних тратах по дням недели ---")
+    print(spending_report)
+
 
 # Пример вызова функции (для тестирования)
 if __name__ == "__main__":
