@@ -20,72 +20,89 @@ def get_greeting():
 def process_transactions(input_datetime_str, transactions_df):
     """
     Обрабатывает транзакции за период с начала месяца по заданную дату.
-    Принимает на вход строку с датой и DataFrame с транзакциями.
-    Возвращает список карт (с расходами) и топ-5 транзакций.
+    Возвращает список карт (с расходами) и ТОП-5 транзакций по расходам.
     """
     if not isinstance(transactions_df, pd.DataFrame) or transactions_df.empty:
         logging.warning("Пустой DataFrame передан в обработку. Возвращение пустых списков.")
         return [], []
 
     # Парсинг входной даты
-    input_date = pd.to_datetime(input_datetime_str, dayfirst=True, errors='coerce')
-    start_period = input_date.replace(day=1)
+    input_date = pd.to_datetime(input_datetime_str, format='%Y-%m-%d %H:%M:%S', errors='coerce')
 
-    # Фильтрация по периоду
-    if pd.isnull(input_date):
-        logging.error(f"Не удалось распарсить входную дату: {input_datetime_str}")
-        df_period = pd.DataFrame()  # Создаем пустой DataFrame
-    else:
+    top_transactions = []  # Инициализируем пустой список на случай ошибок
+
+    try:
+        if pd.isnull(input_date):
+            raise ValueError(f"Не удалось распарсить входную дату: {input_datetime_str}")
+
         start_period = input_date.replace(day=1)
-        mask = (transactions_df['Дата операции'] >= start_period) & \
-               (transactions_df['Дата операции'] <= input_date)
-        df_period = transactions_df.loc[mask]
 
-    # Агрегация по картам (сумма расходов и кешбэк)
+        # --- НОВАЯ ЛОГИКА ДЛЯ КРИТЕРИЯ 3 ---
+        # Фильтруем данные за нужный период
+        mask_period = (
+                (transactions_df['Дата операции'] >= start_period) &
+                (transactions_df['Дата операции'] <= input_date)
+        )
+        df_period = transactions_df.loc[mask_period]
+
+        # Проверяем наличие необходимых столбцов перед работой
+        required_cols_top = ['Дата операции', 'Сумма платежа', 'Категория', 'Описание']
+        if all(col in df_period.columns for col in required_cols_top):
+
+            # Конвертируем сумму к числу
+            df_period['Сумма платежа'] = pd.to_numeric(
+                df_period['Сумма платежа'].astype(str).str.replace(',', '.'),
+                errors='coerce'
+            )
+
+            # Оставляем только расходы (сумма < 0)
+            df_expenses = df_period[df_period['Сумма платежа'] < 0].copy()
+
+            # Сортируем по убыванию расхода (берем модуль суммы)
+            df_sorted = df_expenses.sort_values(by='Сумма платежа', key=abs, ascending=False)
+
+            # Берем ровно 5 транзакций
+            top_5 = df_sorted.head(5)
+
+            # Формируем итоговый список словарей
+            for _, row in top_5.iterrows():
+                top_transactions.append({
+                    "date": row.get('Дата операции').strftime('%d.%m.%Y'),  # Формат dd.mm.yyyy
+                    "amount": float(row.get('Сумма платежа', 0)),
+                    "category": row.get('Категория', ''),
+                    "description": row.get('Описание', '')
+                })
+        else:
+            logging.error(f"В данных для топ-транзакций отсутствуют необходимые колонки: {required_cols_top}")
+
+    except Exception as e:
+        logging.error(f"Ошибка при формировании топ-транзакций: {e}")
+
+    # Остальная логика для агрегации по картам остается без изменений
     cards_info = []
-    required_cols = ['Номер карты', 'Сумма платежа']
+    required_cols_cards = ['Номер карты', 'Сумма платежа']
 
-    # Проверяем, что датафрейм не пуст и нужные колонки существуют
-    if not df_period.empty and all(col in df_period.columns for col in required_cols):
-
+    if not df_period.empty and all(col in df_period.columns for col in required_cols_cards):
         df_period['last_4_digits'] = df_period['Номер карты'].astype(str).str.replace(r'\D', '', regex=True).str[-4:]
         df_period['Сумма платежа'] = pd.to_numeric(
             df_period['Сумма платежа'].astype(str).str.replace(',', '.'),
             errors='coerce'
         )
 
-        # Группируем данные по последним 4 цифрам и суммируем расходы
         grouped = df_period.groupby('last_4_digits')['Сумма платежа'].sum().reset_index()
 
         for _, row in grouped.iterrows():
-            # Получаем значение из текущей строки
             sum_value = row.get('Сумма платежа')
-
-            # Проверяем, является ли значение числовым и не пустым (не NaN)
             if pd.notnull(sum_value):
                 try:
                     sum_as_float = float(sum_value)
                     cards_info.append({
                         "last_digits": row['last_4_digits'],
-                        "total_spent": round(sum_as_float, 2),
-                        "cashback": round(abs(sum_as_float) / 100, 2)
+                        "total_spent": round(abs(sum_as_float), 2),
+                        "cashback": round(abs(sum_as_float) / 100, 2)  # Расчет кешбэка 1%
                     })
                 except (ValueError, TypeError):
                     logging.warning(f"Некорректное значение суммы: {sum_value}. Строка пропущена.")
-            # Если значение пустое (NaN), мы его просто игнорируем
-
-    # Топ-5 транзакций по сумме платежа
-    top_transactions = []
-    if not df_period.empty:
-        top_5 = df_period.sort_values(by='Сумма платежа', key=abs, ascending=False).head(5)
-
-        for _, row in top_5.iterrows():
-            top_transactions.append({
-                "date": row.get('Дата операции').strftime('%d.%m.%Y'),
-                "amount": float(row.get('Сумма платежа', 0)),
-                "category": row.get('Категория', ''),
-                "description": row.get('Описание', '')
-            })
 
     return cards_info, top_transactions
 
