@@ -23,8 +23,8 @@ def analyze_cashback_categories(data_df, year, month):
     # 1. Фильтрация по статусу и валюте
     filtered_df = data_df[
         (data_df['Статус'] == 'OK')
-        and (data_df['Валюта платежа'] == TARGET_CURRENCY)
-    ]
+        & (data_df['Валюта платежа'] == TARGET_CURRENCY)
+        ]
 
     # 2. Фильтрация по дате (используем 'Дата платежа')
     filtered_df = filtered_df[pd.to_datetime(filtered_df['Дата платежа'],
