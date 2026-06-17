@@ -4,57 +4,75 @@ import pandas as pd
 
 logger = logging.getLogger('cashback_analyzer')
 
-# Константы ставок кешбэка
+# Константы ставок кешбэка и игнорируемые категории
 HIGH_CASHBACK_RATE = 0.05
 TARGET_CURRENCY = 'RUB'
-
+IGNORED_CATEGORIES = {'Переводы', 'Наличные'} # Категории, которые мы не учитываем в топе
 
 def analyze_cashback_categories(data_df, year, month):
     """
     Анализирует данные о транзакциях из DataFrame за указанный месяц и год.
+    Реализует логику: Топ-7 категорий + категория 'Остальное'.
     """
     logger.info(f"Начало анализа кешбэка за {month:02d}.{year}")
 
-    # Проверяем, что DataFrame не пустой
     if data_df.empty:
         logger.info("Данные для анализа отсутствуют.")
         return {}
 
-    # 1. Фильтрация по статусу и валюте
+    # 1. Базовая фильтрация по статусу, валюте и дате
     filtered_df = data_df[
-        (data_df['Статус'] == 'OK')
-        & (data_df['Валюта платежа'] == TARGET_CURRENCY)
-        ]
+        (data_df['Статус'] == 'OK') &
+        (data_df['Валюта платежа'] == TARGET_CURRENCY)
+    ]
 
-    # 2. Фильтрация по дате (используем 'Дата платежа')
-    filtered_df = filtered_df[pd.to_datetime(filtered_df['Дата платежа'],
-                                             dayfirst=True, errors='coerce').dt.year == year]
-    filtered_df = filtered_df[pd.to_datetime(filtered_df['Дата платежа'],
-                                             dayfirst=True, errors='coerce').dt.month == month]
+    filtered_df = filtered_df[
+        (pd.to_datetime(filtered_df['Дата платежа'], dayfirst=True, errors='coerce').dt.year == year) &
+        (pd.to_datetime(filtered_df['Дата платежа'], dayfirst=True, errors='coerce').dt.month == month)
+    ]
 
     if filtered_df.empty:
         logger.info("Нет подходящих транзакций за указанный период.")
         return {}
 
-    # 3. Группировка по категориям и суммирование абсолютных значений 'Сумма платежа'
-    # abs() используется, так как расходы могут быть отрицательными
+    # 2. Группировка по категориям и суммирование расходов (берем модуль суммы)
     category_sums = (
         filtered_df
         .groupby('Категория')['Сумма платежа']
-        .sum()
-        .apply(abs)
+        .apply(lambda x: abs(x.sum())) # Суммируем модули всех значений в группе
         .to_dict()
     )
 
-    # 4. Расчет итогового кешбэка по категориям
-    analysis_result = {
-        category: round(total_sum * HIGH_CASHBACK_RATE, 2)
-        for category, total_sum in category_sums.items()
+    # 3. Логика "Топ-7 + Остальное"
+    analysis_result = {}
+    total_rest_amount = 0.0
+
+    # Сортируем все категории по сумме трат
+    sorted_cats = sorted(category_sums.items(), key=lambda item: item[1], reverse=True)
+
+    # Добавляем в результат топ-7 категорий (пропуская переводы/наличные)
+    added_count = 0
+    for cat_name, amount in sorted_cats:
+        if added_count >= 7:
+            break
+        if cat_name in IGNORED_CATEGORIES:
+            continue
+        analysis_result[cat_name] = round(amount * HIGH_CASHBACK_RATE, 2)
+        added_count += 1
+
+    # Агрегируем все остальные траты (включая переводы/наличные и то, что осталось после топ-7)
+    rest_items = {
+        k: v for k, v in category_sums.items() if k not in analysis_result
     }
+    if rest_items:
+        total_rest_amount = sum(rest_items.values())
+        analysis_result["Остальное"] = round(total_rest_amount * HIGH_CASHBACK_RATE, 2)
 
-    logger.info(f"Анализ завершен. Найдено {len(analysis_result)} категорий.")
+    # Если в топ-7 попали не все возможные категории (например, всего было 5), но есть "Остальное",
+    # или если "Остальное" сформировано из переводов, оно уже добавлено.
+
+    logger.info(f"Анализ завершен. Найдено {len(analysis_result)} категорий (включая 'Остальное').")
     return analysis_result
-
 
 def get_analysis_as_json(data_df, year, month):
     """
