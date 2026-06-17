@@ -59,20 +59,19 @@ def analyze_cashback_categories(data_df, year, month):
 def get_analysis_as_json(data_df, year, month):
     """
     Возвращает результат анализа в формате JSON-строки.
-    Категории в JSON сортируются по сумме кешбэка в порядке убывания.
+    Категории сортируются по сумме кешбэка.
     """
     analysis_dict = analyze_cashback_categories(data_df, year, month)
 
-    # Проверяем, что словарь не пустой, чтобы не сортировать пустые данные
-    if analysis_dict:
+    sorted_analysis_dict = {}
+
+    # Явная проверка на то, что анализ прошел успешно и вернул непустой словарь
+    if analysis_dict and isinstance(analysis_dict, dict) and len(analysis_dict) > 0:
         # 1. Сортируем элементы словаря по значению (сумме кешбэка) по убыванию
         sorted_items = sorted(analysis_dict.items(), key=lambda item: item[1], reverse=True)
-
         # 2. Создаем новый словарь из отсортированного списка кортежей
         sorted_analysis_dict = dict(sorted_items)
-    else:
-        # Если данных нет, просто используем пустой словарь
-        sorted_analysis_dict = analysis_dict
 
-    # Преобразуем отсортированный словарь в JSON-строку
+    # Преобразуем итоговый словарь в JSON-строку.
+    # Если данных нет, вернется "{}"
     return json.dumps(sorted_analysis_dict, ensure_ascii=False, indent=2)

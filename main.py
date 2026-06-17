@@ -122,7 +122,6 @@ def main():
                 report_date = datetime.now().strftime('%d.%m.%Y')
                 logging.info(f"Опорная дата не указана, используется текущая: {report_date}")
 
-            # Стало (исправлено)
             spending_report_data = analyze_spending_by_weekday(transactions_data, report_date)
 
             # Проверяем, что данные не пустые, и преобразуем DataFrame в список словарей

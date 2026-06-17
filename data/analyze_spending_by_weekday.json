@@ -1,4 +1,40 @@
 {
-    "report_date": "2026-06-16T19:23:30.247280",
-    "data": []
+    "report_date": "2026-06-17T14:16:20.421430",
+    "data": [
+        {
+            "index": 0,
+            "weekday": "Friday",
+            "avg_amount": -445.78
+        },
+        {
+            "index": 1,
+            "weekday": "Monday",
+            "avg_amount": -761.5
+        },
+        {
+            "index": 2,
+            "weekday": "Saturday",
+            "avg_amount": -320.28
+        },
+        {
+            "index": 3,
+            "weekday": "Sunday",
+            "avg_amount": -230.42
+        },
+        {
+            "index": 4,
+            "weekday": "Thursday",
+            "avg_amount": 1279.15
+        },
+        {
+            "index": 5,
+            "weekday": "Tuesday",
+            "avg_amount": -239.99
+        },
+        {
+            "index": 6,
+            "weekday": "Wednesday",
+            "avg_amount": -735.18
+        }
+    ]
 }
